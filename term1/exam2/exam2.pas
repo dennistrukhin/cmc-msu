@@ -7,9 +7,6 @@ const
   STRING_MAX_LENGTH = 24;
   GROUP_LOWER_NUMBER = 301;
   GROUP_HIGHER_NUMBER = 329;
-  MODALITY_TYPE_PATRONYM = 'patronim';
-  MODALITY_TYPE_MONTH = 'month';
-  MODALITY_TYPE_CITY = 'city';
 
 type
   {У меня fpc не поддерживает перечисляемыет типы с русскими символами
@@ -24,7 +21,7 @@ type
   TStudent = record
     first_name: string[STRING_MAX_LENGTH];
     last_name: string[STRING_MAX_LENGTH];
-    patronym: string[STRING_MAX_LENGTH];
+    patronim: string[STRING_MAX_LENGTH];
     gender: TGender;
     date_of_birth: TDate;
     group_number: integer;
@@ -40,7 +37,6 @@ type
   PTModality = ^TModalityItem;
   TModalityItem = record
     next: PTModality;
-    param: string;
     value: string[STRING_MAX_LENGTH];
     count: integer;
   end;
@@ -53,13 +49,11 @@ var
   input_file: TextFile;
   input_line: string;
   head_student, last_student, current_student: PTStudent;
-  head_modality, last_modality, current_modality: PTModality;
   tmp_last, tmp_current: PTStudent;
   student: TStudent;
   groups: array[GROUP_LOWER_NUMBER..GROUP_HIGHER_NUMBER] of TGroup;
   i: integer;
   inserted: boolean;
-  tmp_string: string;
 
 function input_parser(input: string): TStudent;
 var
@@ -80,7 +74,7 @@ begin
 
   student.first_name := student_data[1];
   student.last_name := student_data[0];
-  student.patronym := student_data[2];
+  student.patronim := student_data[2];
   {Здесь 'М' в сравнении - это кириллическая М}
   if student_data[3] = 'М' then student.gender := M else student.gender := F;
   student.city := student_data[5];
@@ -130,42 +124,7 @@ end;
 
 function getStudentFullName(student: TStudent): string;
 begin
-  getStudentFullName := student.last_name + ' ' + student.first_name + ' ' + student.patronym;
-end;
-
-
-function getModalityItem(modality_type: string; value: string): PTModality;
-var
-  found: boolean;
-  tmp_modality: PTModality;
-begin
-  found := false;
-  if head_modality = nil then begin
-    new(current_modality);
-    current_modality^.next := nil;
-    current_modality^.param := modality_type;
-    current_modality^.value := value;
-    head_modality := current_modality;
-    getModalityItem := current_modality
-  end else begin
-    tmp_modality := head_modality;
-    while (tmp_modality <> nil) and (not found) do begin
-      if (tmp_modality^.param = modality_type) and (tmp_modality^.value = value) then begin
-        getModalityItem := tmp_modality;
-        found := true;
-      end;
-      last_modality := tmp_modality;
-      tmp_modality := tmp_modality^.next;
-    end;
-    if not found then begin
-      new(current_modality);
-      current_modality^.next := nil;
-      current_modality^.param := modality_type;
-      current_modality^.value := value;
-      last_modality^.next := current_modality;
-      getModalityItem := current_modality;
-    end;
-  end;
+  getStudentFullName := student.last_name + ' ' + student.first_name + ' ' + student.patronim;
 end;
 
 
@@ -194,6 +153,11 @@ begin
       tmp_last := tmp_current;
       inserted := false;
       while (tmp_current <> nil) do begin
+        // // writeln('Working with ', getStudentFullName(tmp_current^.student));
+        // if tmp_current^.next <> nil then
+        //   writeln('Next is ', getStudentFullName(tmp_current^.next^.student))
+        // else
+        //   writeln('No next');
         if (getStudentFullName(current_student^.student) < getStudentFullName(tmp_current^.student)) and (not inserted) and (current_student^.next = nil) then begin
           inserted := true;
           if tmp_current = head_student then begin
@@ -256,28 +220,10 @@ begin
     if isOneThirdFromCitiesSubset(groups[i]) then
       writeln(i);
 
-  {Просчитаем встречаемость каждого элемента}
-  {Мы изнчально не знаем, сколько у нас будет таких элементов, поэтому}
-  {будем использовать однсвязный список, чтобы легко добавлять новые элементы}
   current_student := head_student;
-  head_modality := nil;
   while current_student <> nil do begin
-    writeln(getStudentFullName(current_student^.student), ' ', current_student^.student.group_number, ' ', current_student^.student.date_of_birth.month);
-    current_modality := getModalityItem(MODALITY_TYPE_PATRONYM, current_student^.student.patronym);
-    inc(current_modality^.count);
-    current_modality := getModalityItem(MODALITY_TYPE_CITY, current_student^.student.city);
-    inc(current_modality^.count);
-    str(current_student^.student.date_of_birth.month, tmp_string);
-    current_modality := getModalityItem(MODALITY_TYPE_MONTH, tmp_string);
-    inc(current_modality^.count);
-
+    writeln(getStudentFullName(current_student^.student), ' ', current_student^.student.group_number);
     current_student := current_student^.next;
-  end;
-
-  current_modality := head_modality;
-  while current_modality <> nil do begin
-    writeln(current_modality^.param, ' ', current_modality^.value, ' ', current_modality^.count);
-    current_modality := current_modality^.next;
   end;
 
 end.
