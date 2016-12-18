@@ -34,6 +34,12 @@ type
     students_from_cities: integer;
   end;
   PTStudent = ^TStudentListItem;
+  PTModality = ^TModalityItem;
+  TModalityItem = record
+    next: PTModality;
+    value: string[STRING_MAX_LENGTH];
+    count: integer;
+  end;
   TStudentListItem = record
     student: TStudent;
     next: PTStudent;
@@ -102,7 +108,17 @@ end;
 
 function isOneThirdFromCitiesSubset(group: TGroup): boolean;
 begin
-  isOneThirdFromCitiesSubset := (group.students_from_cities / group.total_students) > (1.0 / 3.0);
+  isOneThirdFromCitiesSubset := (group.total_students > 0) and ((group.students_from_cities / group.total_students) > (1.0 / 3.0));
+end;
+
+
+function isInGroupSubset(student: TStudent): boolean;
+var
+  i: integer;
+begin
+  isInGroupSubset := false;
+  for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
+    isInGroupSubset := isInGroupSubset or isOneThirdFromCitiesSubset(groups[i]) and (student.group_number = i);
 end;
 
 
@@ -165,17 +181,30 @@ begin
   close(input_file);
 
   for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do begin
+    groups[i].number := i;
     groups[i].total_students := 0;
     groups[i].students_from_cities := 0;
   end;
 
   current_student := head_student;
+  last_student := current_student;
   while current_student <> nil do begin
-    writeln(getStudentFullName(current_student^.student));
     inc(groups[current_student^.student.group_number].total_students);
     if isStudentFromCitiesSubset(current_student^.student) then
       inc(groups[current_student^.student.group_number].students_from_cities);
+    last_student := current_student;
+    current_student := current_student^.next;
+  end;
 
+  {Теперь удалим всех лишних студентов из списка}
+  current_student := head_student;
+  last_student := current_student;
+  while current_student <> nil do begin
+    if isInGroupSubset(current_student^.student) then begin
+      last_student := current_student;
+    end else begin
+      last_student^.next := current_student^.next;
+    end;
     current_student := current_student^.next;
   end;
 
@@ -185,5 +214,16 @@ begin
       writeln('Всего студентов: ', groups[i].total_students);
       writeln('Из указанных городов: ', groups[i].students_from_cities);
     end;
+
+  writeln('Отобраны для работы следующие группы:');
+  for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
+    if isOneThirdFromCitiesSubset(groups[i]) then
+      writeln(i);
+
+  current_student := head_student;
+  while current_student <> nil do begin
+    writeln(getStudentFullName(current_student^.student), ' ', current_student^.student.group_number);
+    current_student := current_student^.next;
+  end;
 
 end.
