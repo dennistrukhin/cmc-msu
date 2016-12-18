@@ -53,8 +53,8 @@ type
 var
   input_file: TextFile;
   input_line: string;
-  head_student, last_student, current_student, tmp_student: PTStudent;
-  head_modality, last_modality, current_modality, tmp_modality: PTModality;
+  head_student, last_student, current_student: PTStudent;
+  head_modality, last_modality, current_modality: PTModality;
   tmp_last, tmp_current: PTStudent;
   groups: array[GROUP_LOWER_NUMBER..GROUP_HIGHER_NUMBER] of TGroup;
   i: integer;
@@ -189,6 +189,7 @@ end;
 function getModalityItem(modality_type: string; value: string): PTModality;
 var
   found: boolean;
+  tmp_modality: PTModality;
 begin
   found := false;
   if head_modality = nil then begin
@@ -268,17 +269,10 @@ begin
   while current_student <> nil do begin
     if isInGroupSubset(current_student^.student) then begin
       last_student := current_student;
-      current_student := current_student^.next;
     end else begin
-      if head_student = current_student then begin
-        head_student := current_student^.next;
-      end else begin
-        last_student^.next := current_student^.next;
-      end;
-      tmp_student := current_student^.next;
-      dispose(current_student);
-      current_student := tmp_student;
+      last_student^.next := current_student^.next;
     end;
+    current_student := current_student^.next;
   end;
 
   {Напечатаем помежуточный результат}
@@ -335,13 +329,9 @@ begin
       end else begin
         last_modality^.next := current_modality^.next;
       end;
-      tmp_modality := current_modality^.next;
-      dispose(current_modality);
-      current_modality := tmp_modality;
-    end else begin
+    end else
       last_modality := current_modality;
-      current_modality := current_modality^.next;
-    end;
+    current_modality := current_modality^.next;
   end;
 
   writeln('=== Модальные параметры ===');
