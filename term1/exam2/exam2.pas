@@ -5,8 +5,13 @@ const
   {Если терминал не поддерживает cp-1251, пересохраняем .dat и .pas в UTF-8
    и ставим STRING_MAX_LENGTH = 24}
   STRING_MAX_LENGTH = 24;
+  GROUP_LOWER_NUMBER = 301;
+  GROUP_HIGHER_NUMBER = 329;
 
 type
+  {У меня fpc не поддерживает перечисляемыет типы с русскими символами
+   (особенности платформы?), поэтому пришлось использовать латиницу и
+   подменять при чтении}
   TGender = (M, F);
   TDate = record
     day: integer;
@@ -23,9 +28,10 @@ type
     city: string[STRING_MAX_LENGTH];
     marks: array[0..2] of integer;
   end;
-  TCity = record
-    city_name: string[STRING_MAX_LENGTH];
-    students_count: integer;
+  TGroup = record
+    number: integer;
+    total_students: integer;
+    students_from_cities: integer;
   end;
   PTStudent = ^TStudentListItem;
   TStudentListItem = record
@@ -36,11 +42,9 @@ type
 var
   input_file: TextFile;
   input_line: string;
-  sp: PTStudent;
-  student: TStudent;
   head_student, current_student: PTStudent;
-  head_group, current_group: PTStudent;
-  cities: array[0..6] of TCity;
+  groups: array[GROUP_LOWER_NUMBER..GROUP_HIGHER_NUMBER] of TGroup;
+  i: integer;
 
 function input_parser(input: string): TStudent;
 var
@@ -62,6 +66,7 @@ begin
   student.first_name := student_data[0];
   student.last_name := student_data[1];
   student.patronim := student_data[2];
+  {Здесь 'М' в сравнении - это кириллическая М}
   if student_data[3] = 'М' then student.gender := M else student.gender := F;
   student.city := student_data[5];
   val(student_data[6], student.group_number);
@@ -78,6 +83,25 @@ begin
 
   input_parser := student;
 end;
+
+
+function isStudentFromCitiesSubset(student: TStudent): boolean;
+begin
+  isStudentFromCitiesSubset := (student.city = 'ВЛАДИМИР')
+    or (student.city = 'ИВАНОВО')
+    or (student.city = 'КАЛУГА')
+    or (student.city = 'МОСКВА')
+    or (student.city = 'РЯЗАНЬ')
+    or (student.city = 'СМОЛЕНСК')
+    or (student.city = 'ТВЕРЬ');
+end;
+
+
+function isOneThirdFromCitiesSubset(group: TGroup): boolean;
+begin
+  isOneThirdFromCitiesSubset := (group.students_from_cities / group.total_students) > (1.0 / 3.0);
+end;
+
 
 begin
   {прочитаем строки из файла, преобразуем их в записи, создадим односвязный список}
@@ -100,18 +124,20 @@ begin
     writeln('Ошибка: файл с данными пуст');
   close(input_file);
 
-  cities[0].city_name := 'ВЛАДИМИР';
-  cities[1].city_name := 'ИВАНОВО';
-  cities[2].city_name := 'КАЛУГА';
-  cities[3].city_name := 'МОСКВА';
-  cities[4].city_name := 'РЯЗАНЬ';
-  cities[5].city_name := 'СМОЛЕНСК';
-  cities[6].city_name := 'ТВЕРЬ';
-
   current_student := head_student;
   while current_student <> nil do begin
-    Writeln (current_student^.student.first_name);
+    inc(groups[current_student^.student.group_number].total_students);
+    if isStudentFromCitiesSubset(current_student^.student) then
+      inc(groups[current_student^.student.group_number].students_from_cities);
+
     current_student := current_student^.next;
   end;
+
+  for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
+    if groups[i].total_students > 0 then begin
+      writeln('## Группа ', i);
+      writeln('Всего студентов: ', groups[i].total_students);
+      writeln('Из указанных городов: ', groups[i].students_from_cities);
+    end;
 
 end.
