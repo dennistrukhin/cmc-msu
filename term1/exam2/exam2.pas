@@ -60,6 +60,7 @@ var
   i: integer;
   inserted: boolean;
   tmp_string: string;
+  max_count_patronym, max_count_month, max_count_city: integer;
 
 function input_parser(input: string): TStudent;
 var
@@ -277,6 +278,50 @@ begin
   current_modality := head_modality;
   while current_modality <> nil do begin
     writeln(current_modality^.param, ' ', current_modality^.value, ' ', current_modality^.count);
+    current_modality := current_modality^.next;
+  end;
+
+  {Почистим список моадльностей и оставим в нём только сами моды (максимальные значения)}
+  max_count_city := 0;
+  max_count_patronym := 0;
+  max_count_month := 0;
+  current_modality := head_modality;
+  while current_modality <> nil do begin
+    if (current_modality^.param = MODALITY_TYPE_CITY) and (current_modality^.count > max_count_city) then
+      max_count_city := current_modality^.count;
+    if (current_modality^.param = MODALITY_TYPE_MONTH) and (current_modality^.count > max_count_month) then
+      max_count_month := current_modality^.count;
+    if (current_modality^.param = MODALITY_TYPE_PATRONYM) and (current_modality^.count > max_count_patronym) then
+      max_count_patronym := current_modality^.count;
+    current_modality := current_modality^.next;
+  end;
+  writeln('city: ', max_count_city, ', patronym: ', max_count_patronym, ', month: ', max_count_month);
+  current_modality := head_modality;
+  last_modality := current_modality;
+  while current_modality <> nil do begin
+    if (current_modality^.param = MODALITY_TYPE_CITY) and (current_modality^.count < max_count_city)
+      or (current_modality^.param = MODALITY_TYPE_MONTH) and (current_modality^.count < max_count_month)
+      or (current_modality^.param = MODALITY_TYPE_PATRONYM) and (current_modality^.count < max_count_patronym) then begin
+      writeln('Unsetting ', current_modality^.param, ' ', current_modality^.value);
+      if current_modality = head_modality then begin
+        head_modality := current_modality^.next;
+      end else begin
+        last_modality^.next := current_modality^.next;
+      end;
+    end else
+      last_modality := current_modality;
+    current_modality := current_modality^.next;
+  end;
+
+  writeln('=== Модальные параметры ===');
+  current_modality := head_modality;
+  while current_modality <> nil do begin
+    case current_modality^.param of
+      MODALITY_TYPE_CITY: write('Город: ');
+      MODALITY_TYPE_MONTH: write('Месяц: ');
+      MODALITY_TYPE_PATRONYM: write('Отчество: ');
+    end;
+    writeln(current_modality^.value);
     current_modality := current_modality^.next;
   end;
 
