@@ -30,6 +30,7 @@ type
     group_number: integer;
     city: string[STRING_MAX_LENGTH];
     marks: array[0..2] of integer;
+    modality: integer;
   end;
   TGroup = record
     number: integer;
@@ -55,12 +56,12 @@ var
   head_student, last_student, current_student: PTStudent;
   head_modality, last_modality, current_modality: PTModality;
   tmp_last, tmp_current: PTStudent;
-  student: TStudent;
   groups: array[GROUP_LOWER_NUMBER..GROUP_HIGHER_NUMBER] of TGroup;
   i: integer;
   inserted: boolean;
   tmp_string: string;
   max_count_patronym, max_count_month, max_count_city: integer;
+  max_student_modality: integer;
 
 function input_parser(input: string): TStudent;
 var
@@ -79,6 +80,7 @@ begin
     end;
   end;
 
+  student.modality := 0;
   student.first_name := student_data[1];
   student.last_name := student_data[0];
   student.patronym := student_data[2];
@@ -101,77 +103,14 @@ begin
 end;
 
 
-function isStudentFromCitiesSubset(student: TStudent): boolean;
-begin
-  isStudentFromCitiesSubset := (student.city = 'ВЛАДИМИР')
-    or (student.city = 'ИВАНОВО')
-    or (student.city = 'КАЛУГА')
-    or (student.city = 'МОСКВА')
-    or (student.city = 'РЯЗАНЬ')
-    or (student.city = 'СМОЛЕНСК')
-    or (student.city = 'ТВЕРЬ');
-end;
-
-
-function isOneThirdFromCitiesSubset(group: TGroup): boolean;
-begin
-  isOneThirdFromCitiesSubset := (group.total_students > 0) and ((group.students_from_cities / group.total_students) > (1.0 / 3.0));
-end;
-
-
-function isInGroupSubset(student: TStudent): boolean;
-var
-  i: integer;
-begin
-  isInGroupSubset := false;
-  for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
-    isInGroupSubset := isInGroupSubset or isOneThirdFromCitiesSubset(groups[i]) and (student.group_number = i);
-end;
-
-
 function getStudentFullName(student: TStudent): string;
 begin
   getStudentFullName := student.last_name + ' ' + student.first_name + ' ' + student.patronym;
 end;
 
 
-function getModalityItem(modality_type: string; value: string): PTModality;
-var
-  found: boolean;
-  tmp_modality: PTModality;
+procedure readDataFromFile;
 begin
-  found := false;
-  if head_modality = nil then begin
-    new(current_modality);
-    current_modality^.next := nil;
-    current_modality^.param := modality_type;
-    current_modality^.value := value;
-    head_modality := current_modality;
-    getModalityItem := current_modality
-  end else begin
-    tmp_modality := head_modality;
-    while (tmp_modality <> nil) and (not found) do begin
-      if (tmp_modality^.param = modality_type) and (tmp_modality^.value = value) then begin
-        getModalityItem := tmp_modality;
-        found := true;
-      end;
-      last_modality := tmp_modality;
-      tmp_modality := tmp_modality^.next;
-    end;
-    if not found then begin
-      new(current_modality);
-      current_modality^.next := nil;
-      current_modality^.param := modality_type;
-      current_modality^.value := value;
-      last_modality^.next := current_modality;
-      getModalityItem := current_modality;
-    end;
-  end;
-end;
-
-
-begin
-  {прочитаем строки из файла, преобразуем их в записи, создадим односвязный список}
   assign(input_file, DATA_FILE_NAME);
   reset(input_file);
   if not eof(input_file) then begin
@@ -216,13 +155,104 @@ begin
   end else
     writeln('Ошибка: файл с данными пуст');
   close(input_file);
+end;
 
+
+function isStudentFromCitiesSubset(student: TStudent): boolean;
+begin
+  isStudentFromCitiesSubset := (student.city = 'ВЛАДИМИР')
+    or (student.city = 'ИВАНОВО')
+    or (student.city = 'КАЛУГА')
+    or (student.city = 'МОСКВА')
+    or (student.city = 'РЯЗАНЬ')
+    or (student.city = 'СМОЛЕНСК')
+    or (student.city = 'ТВЕРЬ');
+end;
+
+
+function isOneThirdFromCitiesSubset(group: TGroup): boolean;
+begin
+  isOneThirdFromCitiesSubset := (group.total_students > 0) and ((group.students_from_cities / group.total_students) > (1.0 / 3.0));
+end;
+
+
+function isInGroupSubset(student: TStudent): boolean;
+var
+  i: integer;
+begin
+  isInGroupSubset := false;
+  for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
+    isInGroupSubset := isInGroupSubset or isOneThirdFromCitiesSubset(groups[i]) and (student.group_number = i);
+end;
+
+
+function getModalityItem(modality_type: string; value: string): PTModality;
+var
+  found: boolean;
+  tmp_modality: PTModality;
+begin
+  found := false;
+  if head_modality = nil then begin
+    new(current_modality);
+    current_modality^.next := nil;
+    current_modality^.param := modality_type;
+    current_modality^.value := value;
+    head_modality := current_modality;
+    getModalityItem := current_modality
+  end else begin
+    tmp_modality := head_modality;
+    while (tmp_modality <> nil) and (not found) do begin
+      if (tmp_modality^.param = modality_type) and (tmp_modality^.value = value) then begin
+        getModalityItem := tmp_modality;
+        found := true;
+      end;
+      last_modality := tmp_modality;
+      tmp_modality := tmp_modality^.next;
+    end;
+    if not found then begin
+      new(current_modality);
+      current_modality^.next := nil;
+      current_modality^.param := modality_type;
+      current_modality^.value := value;
+      last_modality^.next := current_modality;
+      getModalityItem := current_modality;
+    end;
+  end;
+end;
+
+
+function getStudentModality(student: TStudent): integer;
+var
+  result: integer;
+begin
+  result := 0;
+  current_modality := head_modality;
+  while current_modality <> nil do begin
+    if (current_modality^.param = MODALITY_TYPE_CITY) and (current_modality^.value = student.city) then
+      inc(result);
+    if (current_modality^.param = MODALITY_TYPE_PATRONYM) and (current_modality^.value = student.patronym) then
+      inc(result);
+    str(student.date_of_birth.month, tmp_string);
+    if (current_modality^.param = MODALITY_TYPE_MONTH) and (current_modality^.value = tmp_string) then
+      inc(result);
+      current_modality := current_modality^.next;
+  end;
+  getStudentModality := result;
+end;
+
+
+begin
+  {прочитаем строки из файла, преобразуем их в записи, создадим односвязный список}
+  readDataFromFile;
+
+  {Инициализируем массив групп}
   for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do begin
     groups[i].number := i;
     groups[i].total_students := 0;
     groups[i].students_from_cities := 0;
   end;
 
+  {Посчитаем число студентов в группах и число студентов из нужных городов}
   current_student := head_student;
   last_student := current_student;
   while current_student <> nil do begin
@@ -245,14 +275,15 @@ begin
     current_student := current_student^.next;
   end;
 
+  {Напечатаем помежуточный результат}
+  writeln('=== Непустые группы: ===');
   for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
     if groups[i].total_students > 0 then begin
-      writeln('## Группа ', i);
+      writeln('# Группа ', i, ' #');
       writeln('Всего студентов: ', groups[i].total_students);
       writeln('Из указанных городов: ', groups[i].students_from_cities);
     end;
-
-  writeln('Отобраны для работы следующие группы:');
+  writeln('=== Отобраны для работы следующие группы: ===');
   for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do
     if isOneThirdFromCitiesSubset(groups[i]) then
       writeln(i);
@@ -263,7 +294,6 @@ begin
   current_student := head_student;
   head_modality := nil;
   while current_student <> nil do begin
-    writeln(getStudentFullName(current_student^.student), ' ', current_student^.student.group_number, ' ', current_student^.student.date_of_birth.month);
     current_modality := getModalityItem(MODALITY_TYPE_PATRONYM, current_student^.student.patronym);
     inc(current_modality^.count);
     current_modality := getModalityItem(MODALITY_TYPE_CITY, current_student^.student.city);
@@ -271,14 +301,7 @@ begin
     str(current_student^.student.date_of_birth.month, tmp_string);
     current_modality := getModalityItem(MODALITY_TYPE_MONTH, tmp_string);
     inc(current_modality^.count);
-
     current_student := current_student^.next;
-  end;
-
-  current_modality := head_modality;
-  while current_modality <> nil do begin
-    writeln(current_modality^.param, ' ', current_modality^.value, ' ', current_modality^.count);
-    current_modality := current_modality^.next;
   end;
 
   {Почистим список моадльностей и оставим в нём только сами моды (максимальные значения)}
@@ -295,14 +318,12 @@ begin
       max_count_patronym := current_modality^.count;
     current_modality := current_modality^.next;
   end;
-  writeln('city: ', max_count_city, ', patronym: ', max_count_patronym, ', month: ', max_count_month);
   current_modality := head_modality;
   last_modality := current_modality;
   while current_modality <> nil do begin
     if (current_modality^.param = MODALITY_TYPE_CITY) and (current_modality^.count < max_count_city)
       or (current_modality^.param = MODALITY_TYPE_MONTH) and (current_modality^.count < max_count_month)
       or (current_modality^.param = MODALITY_TYPE_PATRONYM) and (current_modality^.count < max_count_patronym) then begin
-      writeln('Unsetting ', current_modality^.param, ' ', current_modality^.value);
       if current_modality = head_modality then begin
         head_modality := current_modality^.next;
       end else begin
@@ -323,6 +344,29 @@ begin
     end;
     writeln(current_modality^.value);
     current_modality := current_modality^.next;
+  end;
+
+  max_student_modality := 0;
+  current_student := head_student;
+  while current_student <> nil do begin
+    current_student^.student.modality := getStudentModality(current_student^.student);
+    if max_student_modality < current_student^.student.modality then
+      max_student_modality := current_student^.student.modality;
+    current_student := current_student^.next;
+  end;
+
+  writeln('=== Студенты с max модальностью по: Отчество, Город, Месяц рождения: ===');
+  current_student := head_student;
+  i := 0;
+  while current_student <> nil do begin
+    if max_student_modality = current_student^.student.modality then begin
+      inc(i);
+      writeln(i:4, '. ', getStudentFullName(current_student^.student), ' ', current_student^.student.group_number);
+      writeln('      Отчество: ', current_student^.student.last_name);
+      writeln('      Месяц рождения: ', current_student^.student.date_of_birth.month);
+      writeln('      Город: ', current_student^.student.city);
+    end;
+    current_student := current_student^.next;
   end;
 
 end.
