@@ -42,9 +42,12 @@ type
 var
   input_file: TextFile;
   input_line: string;
-  head_student, current_student: PTStudent;
+  head_student, last_student, current_student: PTStudent;
+  tmp_last, tmp_current: PTStudent;
+  student: TStudent;
   groups: array[GROUP_LOWER_NUMBER..GROUP_HIGHER_NUMBER] of TGroup;
   i: integer;
+  inserted: boolean;
 
 function input_parser(input: string): TStudent;
 var
@@ -63,8 +66,8 @@ begin
     end;
   end;
 
-  student.first_name := student_data[0];
-  student.last_name := student_data[1];
+  student.first_name := student_data[1];
+  student.last_name := student_data[0];
   student.patronim := student_data[2];
   {Здесь 'М' в сравнении - это кириллическая М}
   if student_data[3] = 'М' then student.gender := M else student.gender := F;
@@ -103,29 +106,72 @@ begin
 end;
 
 
+function getStudentFullName(student: TStudent): string;
+begin
+  getStudentFullName := student.last_name + ' ' + student.first_name + ' ' + student.patronim;
+end;
+
+
 begin
   {прочитаем строки из файла, преобразуем их в записи, создадим односвязный список}
   assign(input_file, DATA_FILE_NAME);
   reset(input_file);
   if not eof(input_file) then begin
     readln(input_file, input_line);
-    new(head_student);
-    head_student^.next := nil;
-    head_student^.student := input_parser(input_line);
-    current_student := head_student;
-    while not eof(input_file) do begin
-      new(current_student^.next);
-      readln(input_file, input_line);
-      current_student^.next^.student := input_parser(input_line);
-      current_student := current_student^.next;
-    end;
+    new(current_student);
     current_student^.next := nil;
+    current_student^.student := input_parser(input_line);
+    head_student := current_student;
+    last_student := current_student;
+    while not eof(input_file) do begin
+      {будем сразу же упорядочивать студентов по имени, чтобы в дальнейшем
+       при алфавитном выводе достаточно было идти по списку}
+      new(current_student);
+      readln(input_file, input_line);
+      current_student^.student := input_parser(input_line);
+      current_student^.next := nil;
+      {Переберем весь существующий список и найдем два элемента:
+      tmp_last - элемент, после которого надо вставить текущий
+      tmp_current - элемент, перед которым надо вставить текущий}
+      tmp_current := head_student;
+      tmp_last := tmp_current;
+      inserted := false;
+      while (tmp_current <> nil) do begin
+        // // writeln('Working with ', getStudentFullName(tmp_current^.student));
+        // if tmp_current^.next <> nil then
+        //   writeln('Next is ', getStudentFullName(tmp_current^.next^.student))
+        // else
+        //   writeln('No next');
+        if (getStudentFullName(current_student^.student) < getStudentFullName(tmp_current^.student)) and (not inserted) and (current_student^.next = nil) then begin
+          inserted := true;
+          if tmp_current = head_student then begin
+            current_student^.next := head_student;
+            head_student := current_student;
+          end else begin
+            current_student^.next := tmp_current;
+            tmp_last^.next := current_student;
+          end;
+        end;
+        tmp_last := tmp_current;
+        tmp_current := tmp_current^.next;
+      end;
+      if not inserted then begin
+        tmp_last^.next := current_student;
+        current_student^.next := nil;
+      end;
+    end;
   end else
     writeln('Ошибка: файл с данными пуст');
   close(input_file);
 
+  for i := GROUP_LOWER_NUMBER to GROUP_HIGHER_NUMBER do begin
+    groups[i].total_students := 0;
+    groups[i].students_from_cities := 0;
+  end;
+
   current_student := head_student;
   while current_student <> nil do begin
+    writeln(getStudentFullName(current_student^.student));
     inc(groups[current_student^.student.group_number].total_students);
     if isStudentFromCitiesSubset(current_student^.student) then
       inc(groups[current_student^.student.group_number].students_from_cities);
