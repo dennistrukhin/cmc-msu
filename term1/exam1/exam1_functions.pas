@@ -1,9 +1,9 @@
-unit exam2_functions;
+unit exam1_functions;
 
 interface
 
 uses
-  exam2_types;
+  exam1_types;
 
 function integral(f: Ftype; a, b, eps2: real): real;
 procedure root(f, g, f1, g1: Ftype; a, b, eps1: real; var x: real);

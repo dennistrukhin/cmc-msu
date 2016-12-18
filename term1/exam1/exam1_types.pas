@@ -1,4 +1,4 @@
-unit exam2_types;
+unit exam1_types;
 
 interface
 

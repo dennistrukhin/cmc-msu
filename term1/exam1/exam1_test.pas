@@ -1,7 +1,7 @@
-program exam2_test;
+program exam1_test;
 uses
-  exam2_types,
-  exam2_functions;
+  exam1_types,
+  exam1_functions;
 
 var
   x: real;
