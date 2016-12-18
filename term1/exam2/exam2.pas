@@ -2,6 +2,9 @@ program exam2;
 
 const
   DATA_FILE_NAME = 'students.dat';
+  {Если терминал не поддерживает cp-1251, пересохраняем .dat и .pas в UTF-8
+   и ставим STRING_MAX_LENGTH = 24}
+  STRING_MAX_LENGTH = 24;
 
 type
   TGender = (M, F);
@@ -11,14 +14,18 @@ type
     year: integer;
   end;
   TStudent = record
-    first_name: string[12];
-    last_name: string[12];
-    patronim: string[12];
+    first_name: string[STRING_MAX_LENGTH];
+    last_name: string[STRING_MAX_LENGTH];
+    patronim: string[STRING_MAX_LENGTH];
     gender: TGender;
     date_of_birth: TDate;
     group_number: integer;
-    city: string[12];
+    city: string[STRING_MAX_LENGTH];
     marks: array[0..2] of integer;
+  end;
+  TCity = record
+    city_name: string[STRING_MAX_LENGTH];
+    students_count: integer;
   end;
   PTStudent = ^TStudentListItem;
   TStudentListItem = record
@@ -31,8 +38,9 @@ var
   input_line: string;
   sp: PTStudent;
   student: TStudent;
-  head: PTStudent;
-  current: PTStudent;
+  head_student, current_student: PTStudent;
+  head_group, current_group: PTStudent;
+  cities: array[0..6] of TCity;
 
 function input_parser(input: string): TStudent;
 var
@@ -77,25 +85,33 @@ begin
   reset(input_file);
   if not eof(input_file) then begin
     readln(input_file, input_line);
-    new(Head);
-    head^.next := nil;
-    head^.student := input_parser(input_line);
-    current := head;
+    new(head_student);
+    head_student^.next := nil;
+    head_student^.student := input_parser(input_line);
+    current_student := head_student;
     while not eof(input_file) do begin
-      new(current^.next);
+      new(current_student^.next);
       readln(input_file, input_line);
-      current^.next^.student := input_parser(input_line);
-      current := current^.next;
+      current_student^.next^.student := input_parser(input_line);
+      current_student := current_student^.next;
     end;
-    current^.next := nil;
+    current_student^.next := nil;
   end else
     writeln('Ошибка: файл с данными пуст');
   close(input_file);
 
-  current := head;
-  while current <> nil do begin
-    Writeln (current^.student.first_name);
-    current := current^.next;
+  cities[0].city_name := 'ВЛАДИМИР';
+  cities[1].city_name := 'ИВАНОВО';
+  cities[2].city_name := 'КАЛУГА';
+  cities[3].city_name := 'МОСКВА';
+  cities[4].city_name := 'РЯЗАНЬ';
+  cities[5].city_name := 'СМОЛЕНСК';
+  cities[6].city_name := 'ТВЕРЬ';
+
+  current_student := head_student;
+  while current_student <> nil do begin
+    Writeln (current_student^.student.first_name);
+    current_student := current_student^.next;
   end;
 
 end.
