@@ -1,0 +1,100 @@
+program exam1;
+
+type
+  Ftype = function(x: real): real;
+
+var
+  x1, x2, x3: real;
+  {точки пересечения графиков функций}
+  s1, s2, s3: real;
+  {интегралы соответствующих функций}
+  s: real;
+  {Площадь искомой фигуры}
+
+function integral(f: Ftype; a, b, eps2: real): real;
+var
+  s, h, r_current, r_last: real;
+  {s = сумма, h = шаг}
+  {r_current - текущий результат}
+  {r_last - результат вычислений при прошлом количестве разбиений}
+  i, m: integer;
+  {i = итератор, m = множитель для четных/нечетных значений f(x)}
+  n: integer;
+  {n = количество разбиений}
+begin
+  n := 0;
+  r_current := 0;
+  repeat
+    r_last := r_current;
+    n := n + 10;
+    h := (b - a) / (n - 1);
+    s := f(a) + f(b);
+    m := 4;
+    for i := 1 to n - 2 do begin
+      s := s + m * f(a + h * i);
+      if i mod 2 = 1 then m := 2 else m := 4;
+    end;
+    r_current := s * h / 3;
+  until
+    abs(r_current - r_last) < eps2;
+
+  integral := r_current;
+end;
+
+procedure root(f, g, f1, g1: Ftype; a, b, eps1: real; var x: real);
+var
+  x_current, x_last: real;
+begin
+  x_current := a;
+  repeat
+    x_last := x_current;
+    x_current := x_last - (f(x_last) - g(x_last)) / (f1(x_last) - g1(x_last));
+  until
+    abs(x_current - x_last) < eps1;
+  x := x_current;
+end;
+
+function f1(x: real): real;
+begin
+  f1 := exp(x) + 2;
+end;
+
+function f1_d1(x: real): real;
+begin
+  f1_d1 := exp(x);
+end;
+
+function f2(x: real): real;
+begin
+  f2 := -1 / x;
+end;
+
+function f2_d1(x: real): real;
+begin
+  f2_d1 := 1 / (x * x);
+end;
+
+function f3(x: real): real;
+begin
+  f3 := -2/3 * (x + 1);
+end;
+
+function f3_d1(x: real): real;
+begin
+  f3_d1 := -2/3;
+end;
+
+begin
+  root(@f1, @f3, @f1_d1, @f3_d1, -1, 0, 0.001, x1);
+  root(@f2, @f3, @f2_d1, @f3_d1, -1, 0, 0.001, x2);
+  root(@f1, @f2, @f1_d1, @f2_d1, -1, 0, 0.001, x3);
+  writeln('x1 = ', x1:5:2, ', x2 = ', x2:5:2, ', x3 = ', x3:5:2);
+
+  s1 := integral(@f1, x1, x3, 0.001);
+  s2 := integral(@f2, x2, x3, 0.001);
+  s3 := integral(@f3, x1, x2, 0.001);
+  writeln('s1 = ', s1:5:2, ', s2 = ', s2:5:2, ', s3 = ', s3:5:2);
+
+  s := s1 - s2 - s3;
+  writeln('s = ', s:5:2);
+end.
