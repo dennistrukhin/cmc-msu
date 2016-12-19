@@ -4,7 +4,7 @@ const
   DATA_FILE_NAME = 'students.dat';
   {Если терминал не поддерживает cp-1251, пересохраняем .dat и .pas в UTF-8
    и ставим STRING_MAX_LENGTH = 24}
-  STRING_MAX_LENGTH = 24;
+  STRING_MAX_LENGTH = 12;
   GROUP_LOWER_NUMBER = 301;
   GROUP_HIGHER_NUMBER = 329;
   MODALITY_TYPE_PATRONYM = 'patronim';
