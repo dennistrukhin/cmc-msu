@@ -49,7 +49,8 @@ begin
     x_last := x_current;
     x_current := x_last - (f(x_last) - g(x_last)) / (f1(x_last) - g1(x_last));
   until
-    abs(x_current - x_last) < eps1;
+    (f(x_current) - g(x_current) >= 0) and (f(x_current + eps1) - g(x_current + eps1) <= 0)
+    or (f(x_current) - g(x_current) <= 0) and (f(x_current + eps1) - g(x_current + eps1) >= 0);
   x := x_current;
 end;
 
