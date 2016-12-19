@@ -1,7 +1,9 @@
 program hw5_1a.pas;
+
 var
   i, z: integer;
   eps, x, s, y, q: real;
+  
 begin
   write('x = ');
   readln(x);

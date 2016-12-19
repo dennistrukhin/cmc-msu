@@ -1,8 +1,10 @@
 program hw5_1c;
+
 var
 	i, n: integer;
 	eps, x, s, y, q: real;
 	z: int64;
+	
 begin
 	write('x = ');
   readln(x);
