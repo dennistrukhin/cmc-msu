@@ -1,49 +1,49 @@
 program sorter;
 
 uses
-  CRT;
-
-type
-  TType = (asc, desc, both, random1, random2);
-  TTypes = set of TType;
-  TLengths = set of 1..100;
-  TStats = record
-    t: TType;
-    cmp: array[TType] of integer;
-    move: array[TType] of integer;
-  end;
-  TStatsArray = array[0..3] of TStats;
+  CRT,
+  dataTypes,
+  functions;
 
 var
   types: TTypes;
   t: TType;
   lengths: TLengths;
   l: shortint;
-  stats: TStatsArray;
+  stats: array[0..1] of TStatsArray;
   i: integer;
+  cnt_move, cnt_cmp: integer;
+  fi: textfile;
+  list: TDateArray;
 
-
-procedure drawTable(stats: TStatsArray);
 begin
   clrscr;
-  write(chr(210));
-end;
 
-
-begin
   types := [asc, desc, both, random1, random2];
   lengths := [10, 20, 50, 100];
 
   i := 0;
   for l in lengths do begin
+    stats[0][i].length := l;
+    stats[1][i].length := l;
     for t in types do begin
-      stats[i].t := t;
-      writeln(l, t);
+      list := importListFromFile(t, l);
+      cnt_move := 0;
+      cnt_cmp := 0;
+      sortShuttle(list, l, cnt_cmp, cnt_move);
+      stats[0][i].cmp[t] := cnt_cmp;
+      stats[0][i].move[t] := cnt_move;
+
+      cnt_move := 0;
+      cnt_cmp := 0;
+      stats[1][i].cmp[t] := cnt_cmp;
+      stats[1][i].move[t] := cnt_move;
     end;
     inc(i);
   end;
 
-  drawTable(stats);
+  drawTable(stats[0], 'Binary inserts');
+  drawTable(stats[1], 'Recursive quick sort');
 
 
 end.
