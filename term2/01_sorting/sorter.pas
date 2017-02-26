@@ -34,8 +34,10 @@ begin
       stats[0][i].cmp[t] := cnt_cmp;
       stats[0][i].move[t] := cnt_move;
 
+      list := importListFromFile(t, l);
       cnt_move := 0;
       cnt_cmp := 0;
+      sortQuick(list, l, cnt_cmp, cnt_move);
       stats[1][i].cmp[t] := cnt_cmp;
       stats[1][i].move[t] := cnt_move;
     end;

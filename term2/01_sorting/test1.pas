@@ -26,7 +26,8 @@ begin
 
   cnt_move := 0;
   cnt_cmp := 0;
-  sortShuttle(list, 10, cnt_cmp, cnt_move);
+  // sortShuttle(list, 10, cnt_cmp, cnt_move);
+  sortQuick(list, 10, cnt_cmp, cnt_move);
 
   writeln(cnt_cmp, ' ', cnt_move);
 

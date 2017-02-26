@@ -9,6 +9,7 @@ uses
 procedure drawTable(stats: TStatsArray; sort_name: str);
 function compareDates(d1, d2: TDate; var counter: integer): integer;
 procedure sortShuttle(var list: TDateArray; length: integer; var counter_cmp: integer; var counter_move: integer);
+procedure sortQuick(var list: TDateArray; length: integer;  var counter_cmp: integer; var counter_move: integer);
 function str(s: TType): TTypeStr; overload;
 function str(s: TLength): TTypeStr; overload;
 function importListFromFile(t: TType; l: TLength): TDateArray;
@@ -20,11 +21,8 @@ var
   i, avg: integer;
   t: TType;
   types: TTypes;
-  lengths: TLengths;
 begin
-
-types := [asc, desc, both, random1, random2];
-lengths := [10, 20, 50, 100];
+  types := [asc, desc, both, random1, random2];
   writeln('               ', sort_name);
   writeln('======================================================');
   writeln('|   N | Param   |         Set  number      | Average |');
@@ -145,5 +143,43 @@ begin
     left := left + 1;
   end;
 end;
+
+
+procedure sortQuick(var list: TDateArray; length: integer;  var counter_cmp: integer; var counter_move: integer);
+  procedure sort(l, r: integer);
+  var
+    i, j: integer;
+    x, y: TDate;
+  begin
+    i := l;
+    j := r;
+    x := list[l + random(r - l + 1)];
+    repeat
+      while compareDates(list[i], x, counter_cmp) < 0 do
+        i := i + 1;
+      while compareDates(x, list[j], counter_cmp) < 0 do
+        j := j - 1;
+      if i <= j then begin
+        if compareDates(list[i], list[j], counter_cmp) > 0 then begin
+          y := list[i];
+          list[i] := list[j];
+          list[j] := y;
+          inc(counter_move);
+        end;
+        i := i + 1;
+        j := j - 1;
+      end;
+    until
+      i >= j;
+    if l < j then
+      sort(l, j);
+    if i < r then
+      sort(i, r);
+  end;
+
+begin
+  randomize; {нужно только если используется выборка случайного опорного элемента}
+  sort(1, length)
+end; {quicksort}
 
 end.
