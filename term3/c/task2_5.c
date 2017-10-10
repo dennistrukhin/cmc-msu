@@ -8,6 +8,7 @@ typedef struct Node {
 } Node;
 
 Node *head = NULL;
+int first_output = 1;
 
 void append(Node **head, char *str) {
     // Тут мы создали новый элемент в списке. Пока что он просто "болтается" в памяти
@@ -24,16 +25,17 @@ void append(Node **head, char *str) {
     (*ptr) = tmp;
 }
 
+
 int main() {
     char *str;
-
+    Node **ptr;
     while (scanf("%s", str) != EOF) {
         append(&head, str);
     }
     // В str у нас остался указатель на последнюю строку, так что теперь можно перебрать список
     // и удалить те эелементы, у которых строка такая же и при этом указатена следующий элемент не NULL
     // Пройдёмся по списку
-    Node **ptr = &head;
+    ptr = &head;
     while (*ptr != NULL) {
         if (strcmp(str, (*ptr)->str) == 0 && (*ptr)->next != NULL) {
             (*ptr) = (*ptr)->next;
@@ -43,12 +45,9 @@ int main() {
     }
 
     ptr = &head;
-    int first_output = 1;
     while (*ptr != NULL) {
-        if (first_output == 1) {
-            char space = 'c';
-            char *space_ptr = &space;
-            printf("%c", space);
+        if (!first_output) {
+            printf(" ");
         }
         first_output = 0;
         printf("%s", (*ptr)->str);

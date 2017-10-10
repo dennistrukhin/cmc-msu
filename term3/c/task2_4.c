@@ -3,11 +3,11 @@
 long int power(int n, int a)
 {
     long int r = n;
+    int i;
     if (a == 0) {
         return 1;
     }
     if (a > 1) {
-        int i;
         for (i = 2; i <= a; i++) {
             r = r * n;
         }
