@@ -7,7 +7,8 @@ long int power(int n, int a)
         return 1;
     }
     if (a > 1) {
-        for (int i = 2; i <= a; i++) {
+        int i;
+        for (i = 2; i <= a; i++) {
             r = r * n;
         }
     }
@@ -87,7 +88,7 @@ int main() {
     for (i = 0; i < 100; i++) {
         str[i] = 0;
     }
-    while (scanf("%s", str)) {
+    while (scanf("%s", str) != EOF) {
         n = str2double(str);
         printf("%.10g\n", n);
         for (i = 0; i < 100; i++) {
