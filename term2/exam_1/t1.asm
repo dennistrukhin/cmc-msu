@@ -162,6 +162,7 @@ rule_1 proc far
   push bx
   push ax
   push di
+  push Si
   ; В bp+6 у нас длина строки
   ; В bp+8 у нас адрес начала строки
   mov bx, 0
@@ -195,6 +196,7 @@ not_number:
   jmp change_char
 
 end_rule_1:
+  pop si
   pop di
   pop ax
   pop bx
@@ -205,9 +207,57 @@ rule_1 endp
 
 
 rule_2 proc far
-  outint 12
-  newline
-  ret
+  push bp
+  mov bp, sp
+  
+  push cx
+  push bx
+  push ax
+  push di
+  push si
+
+  ; В bp+6 у нас длина строки
+  ; В bp+8 у нас адрес начала строки
+  mov cx, 0
+  mov dx, [bp+6]
+  mov di, [bp+8]
+  mov si, [bp+8]
+  ; В di у нас будет последний "правильный" символ рассматриваемоый строки
+  ; В si - новый символ, который мы рповеряем на повторяемость
+
+compare_two:
+  cmp dx, cx
+  je end_rule2
+  ; Строка ещё не закончилась
+  ; Смотрим на следуюий симсол
+  inc si
+  mov ax, 0
+  mov bx, 0
+  mov al, byte ptr [di]
+  mov bl, byte ptr [si]
+  outint ax
+  outch ' ' 
+  outint bx
+  newline 
+  cmp al, bl
+  je equal
+
+  inc di
+  mov al, byte ptr [si]
+  mov [di], byte ptr al
+equal:
+  sub dx, 1
+  jmp compare_two
+
+end_rule2:
+
+  pop si
+  pop di
+  pop ax
+  pop bx
+  pop cx
+  pop bp
+  ret 6
 rule_2 endp
 
 
