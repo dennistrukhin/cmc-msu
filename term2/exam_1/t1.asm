@@ -32,10 +32,32 @@ start:
   mov ax, sentence_length
   push ax
   call far ptr sentence_has_property_1
-  outint dx
-  newline
+  mov ax, 0
+  cmp ax, dx
+  je rule2
 
+  ; Первое правило: поменять все 1-9 на соответствующие a-...
+  mov ax, seg sentence
+  push ax
+  lea ax, sentence
+  push ax
+  mov ax, sentence_length
+  push ax
+  call far ptr rule_1
+  jmp program_finish
 
+rule2:
+  ; Второе правило: Заменить группы повторяющихся литер одной из них
+  mov ax, seg sentence
+  push ax
+  lea ax, sentence
+  push ax
+  mov ax, sentence_length
+  push ax
+  call far ptr rule_2
+
+program_finish:
+  call far ptr print_orig_sentence
   finish
 
 
@@ -80,10 +102,10 @@ print_orig_sentence proc far
   lea dx, sentence
   outstr
   newline
-  lea dx, str_snt_length
-  outstr
-  outword sentence_length
-  newline
+  ;lea dx, str_snt_length
+  ;outstr
+  ;outword sentence_length
+  ;newline
 
   pop dx
   pop bp
@@ -111,8 +133,6 @@ sentence_has_property_1 proc far
   mov al, [di]
   ; Теперь у нас в AX лежит код последнего символа строки
   ; Убедимся, что последний символ - заглавная буква
-  outch al
-  newline
   mov dx, 0
   mov bx, 'A'
   cmp ax, bx
@@ -130,8 +150,66 @@ propery_finish:
   pop ax
   pop bx
   pop bp
-  ret 8
+  ret 6
 sentence_has_property_1 endp
+
+
+rule_1 proc far
+  push bp
+  mov bp, sp
+  
+  push cx
+  push bx
+  push ax
+  push di
+  ; В bp+6 у нас длина строки
+  ; В bp+8 у нас адрес начала строки
+  mov bx, 0
+  mov ax, [bp+6]
+  mov si, [bp+8]
+change_char:
+  ; Прверим, находимся ли мы внутри строки
+  cmp bx, ax
+  jge end_rule_1
+
+  ; текущий символ
+  mov di, si
+  add di, bx
+
+  mov cx, 0
+  ; Сравним текущий символ с 0 и 9
+  mov cl, '9'
+  cmp cl, [di]
+  jl not_number
+  mov cl, '0'
+  cmp cl, [di]
+  jg not_number
+  mov cl, [di]
+  sub cl, '0'
+  add cl, 'A'
+  mov [di], byte ptr cl
+
+not_number:
+  inc bx
+
+  jmp change_char
+
+end_rule_1:
+  pop di
+  pop ax
+  pop bx
+  pop cx
+  pop bp
+  ret 6
+rule_1 endp
+
+
+rule_2 proc far
+  outint 12
+  newline
+  ret
+rule_2 endp
+
 
 code ends
 
