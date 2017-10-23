@@ -8,13 +8,14 @@ data segment
   str_snt_length db "Length: $"
   current_char db ?
   ; В конце строки при необходимости добавим $, чтобы выводить
-  ; командой outstr. Поэтому размер на 1 байт больше: 20*8 + 19 + 1
-  sentence db 180 dup (' ')
+  ; командой outstr. Поэтому размер на 1 байт больше: 20*9 + 19 + 1
+  sentence db 200 dup (' ')
   sentence_length dw 0
-  heap db 200 dup (0)
+  heap db 220 dup (0)
 
   node struc
    elem db 8 dup (' ')
+   lngth db 1 dup (0)
    next dd 1 dup (0)
   node ends
 
@@ -39,6 +40,7 @@ start:
 import_word:
   lea si, heap
   add si, heap_offset
+  mov cx, 0
 import_char:
   mov ax, 0
   mov al, ','
@@ -47,7 +49,7 @@ import_char:
   mov al, '.'
   cmp [di], al
   je process_last_word
-  outch [di]
+  inc cx
   mov al, byte ptr [di]
   mov [si], al
 
@@ -62,6 +64,12 @@ next_char:
   inc di
   jmp import_char
 next_word:
+  ; Сохраним длину строки
+  push di
+  lea di, heap
+  add di, heap_offset
+  mov [di+8], byte ptr cl
+  pop di
   ; Посчитаем, больше какого количества имеющихся строк текущая строка больше
   mov dx, 0 ; В dx будем хранить количетсво строк, которые меньше текущей
   mov ax, 0
@@ -98,18 +106,15 @@ current_next:
   inc si
   inc di
   inc cl
-  cmp cl, 8
+  cmp cl, 9
   jl compare_current
 
   pop si
   pop di
 
-  add ax, 10
+  add ax, 11
   jmp next_string
 end_count_calc:
-  outch '('
-  outint dx
-  outch ')'
   ; Теперь у нас в dx количество строк, которые меньше текущей
   ; Значит, мы можем воткнуть текущую строку в нужное место в списке
   ; Если heap_offset == 0, то это самая первая строка, и мы просто ставим её в начало кучи
@@ -121,7 +126,7 @@ end_count_calc:
   mov list, cx
   push di
   lea di, heap
-  add di, 8
+  add di, 9
   mov [di], word ptr 0
   pop di
   jmp append_finish
@@ -136,21 +141,14 @@ not_first_string:
 
   mov ax, 0; Это порядковый номер строки в куче
   lea di, list; Это адрес указателя на первую строку в куче
-  outch 'L'
-  outint word ptr di
-  outch 'S'
-  outword word ptr [di]
 append_next_string:
-  outch '+'
   cmp ax, dx
   je do_append
   inc ax
   ; di указывает на адрес начала текущей строки
   mov bx, word ptr [di] ; в bx - адрес начала строки из кучи
-  add bx, 8; в bx - адрес, где записан адрес следующей строки в куче
+  add bx, 9; в bx - адрес, где записан адрес следующей строки в куче
   mov di, bx
-  outch 'A'
-  outword di
   jmp append_next_string
 
 
@@ -158,21 +156,15 @@ do_append:
 ; di указывает на начало той строки, перед которой надо добавить текущую
 ; теперь di должен начать указывать на начало текущей строки
 ; а текущая строка должна указывать на то, на что раньше указывал di
-  outch 'D' ; Адрес, который должен ссыться на нашу строку
-  outword di
   lea si, heap
   add si, heap_offset
-  add si, 8
+  add si, 9
   ; в si у нас - адрес следующей строки после текущей.
   mov cx, word ptr [di]
   mov [si], cx ; теперь после нашей текущей строки идёт следующая по счёту из кучи
-  outch 'N'
-  outword word ptr [si]
 
   lea cx, heap
   add cx, heap_offset ; теперь cx указывает на нашу текущую строку
-  outch 'C'
-  outword cx
   mov [di], cx
   pop ax
   pop bx
@@ -185,27 +177,39 @@ append_finish:
   je list_finish
   inc si
   inc di
-  add heap_offset, 10
+  add heap_offset, 11
   jmp import_word
 
 list_finish:
   ; Теперь пришло время напечатать результат
   newline
-  newline
+  mov bx, 0
+  ; Выводить нужно в восемь заходов: сперва 1 буква, потом 2, ...
+print_cycle:
+  inc bx
+  cmp bx, 8
+  jg print_finished
   mov di, list
 print_next_word:
+  mov dx, di
   mov ax, 0
+  mov cx, 0
+  mov cl, [di+8]
+  cmp bx, cx
+  jne print_cycle_next
 print_next_char:
   outch [di]
   inc di
   inc ax
   cmp ax, 8
   jl print_next_char
-  outch '-'
-  outword word ptr [di]
+  newline
+print_cycle_next:
+  mov di, dx
+  add di, 9
   mov ax, 0
   cmp ax, word ptr [di]
-  je print_finished
+  je print_cycle
   mov ax, word ptr [di]
   mov di, ax
   jmp print_next_word
@@ -213,7 +217,7 @@ print_next_char:
 print_finished:
   finish
 
-
+; ========================
 
 get_sentence proc far
   push bp
