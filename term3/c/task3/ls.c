@@ -83,11 +83,18 @@ char * get_current_directory()
 }
 
 
+char * abs_path(char * path)
+{
+    return concat(concat(get_current_directory(), "/"), path);
+}
+
+
 int main(int argc, char * argv[])
 {
     int i = 0;
     short int path_provided = 0;
     short int args = 0;
+    char * cur_dir;
     for (i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "-l") == 0)
@@ -115,6 +122,10 @@ int main(int argc, char * argv[])
                 {
                     argv[i][strlen(argv[i]) - 1] = '\0';
                 }
+                if (*argv[i] != '/')
+                {
+                    argv[i] = abs_path(argv[i]);
+                }
                 print_list(argv[i], args, (int)strlen(argv[i]));
             }
             else
@@ -122,9 +133,10 @@ int main(int argc, char * argv[])
                 fprintf(stderr, "Path does not exist: %s\n", argv[i]);
             }
         }
-        if (!path_provided)
-        {
-            print_list(get_current_directory(), args, (int)strlen(argv[i]));
-        }
+    }
+    if (!path_provided)
+    {
+        cur_dir = get_current_directory();
+        print_list(cur_dir, args, (int)strlen(cur_dir));
     }
 }
