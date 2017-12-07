@@ -24,3 +24,8 @@ char * abs_path(char * path)
     }
     return path;
 }
+
+long max(long a, long b)
+{
+    return a > b ? a : b;
+}
