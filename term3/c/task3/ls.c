@@ -5,30 +5,30 @@
 #include <sys/stat.h>
 #include <pwd.h>
 #include <grp.h>
-#include <stdlib.h>
+#include "lib.h"
 
 const int ARG_LIST = 1;
 const int ARG_GROUP = 2;
 const int ARG_RECURSIVE = 4;
 
 
-char* concat(const char *s1, const char *s2)
+void get_linked_file(char * link_name, char original_file_name[1024])
 {
-    char *result = malloc(strlen(s1) + strlen(s2) + 1);
-    strcpy(result, s1);
-    strcat(result, s2);
-    return result;
+    ssize_t len;
+    if ((len = readlink(link_name, original_file_name, 1023)) != -1) {
+        original_file_name[len] = '\0';
+    }
 }
-
 
 void print_list(char * path, int args, int orig_path_len)
 {
     DIR * d;
-    struct stat fileStat;
+    struct stat fileStat, fileStat2;
     struct dirent * dir;
     struct group * grp;
     struct passwd * pwd;
-    char * full_path;
+    char * full_path, * full_path_2;
+    char original_file_name[1024];
     d = opendir(path);
     if (d)
     {
@@ -39,7 +39,7 @@ void print_list(char * path, int args, int orig_path_len)
                 continue;
             }
             full_path = concat(concat(path, "/"), dir->d_name);
-            stat(full_path, &fileStat);
+            lstat(full_path, &fileStat);
             if (args & ARG_LIST) {
                 fprintf(stdout, "%c", S_ISDIR(fileStat.st_mode) ? 'd' : '-');
                 fprintf(stdout, "%c", fileStat.st_mode & S_IRUSR ? 'r' : '-');
@@ -60,7 +60,20 @@ void print_list(char * path, int args, int orig_path_len)
                 printf(" %12s", grp->gr_name);
             }
             if (args & ARG_LIST) {
-                fprintf(stdout, "  %s\n", &(full_path[orig_path_len + 1]));
+                fprintf(stdout, "  %s", &(full_path[orig_path_len + 1]));
+                if (S_ISLNK(fileStat.st_mode)) {
+                    full_path_2 = dir->d_name;
+                    while (1) {
+                        get_linked_file(full_path_2, original_file_name);
+                        lstat(full_path_2, &fileStat2);
+                        if (!S_ISLNK(fileStat2.st_mode)) {
+                            break;
+                        }
+                        full_path_2 = concat(concat(path, "/"), original_file_name);
+                    }
+                    fprintf(stdout, " -> %s", original_file_name);
+                }
+                fprintf(stdout, "\n");
             } else {
                 fprintf(stdout, "%s  ", &(full_path[orig_path_len + 1]));
             }
@@ -72,20 +85,6 @@ void print_list(char * path, int args, int orig_path_len)
         }
         closedir(d);
     }
-}
-
-
-char * get_current_directory()
-{
-    char * cwd;
-    cwd = getcwd(0, 0);
-    return cwd;
-}
-
-
-char * abs_path(char * path)
-{
-    return concat(concat(get_current_directory(), "/"), path);
 }
 
 
@@ -122,10 +121,7 @@ int main(int argc, char * argv[])
                 {
                     argv[i][strlen(argv[i]) - 1] = '\0';
                 }
-                if (*argv[i] != '/')
-                {
-                    argv[i] = abs_path(argv[i]);
-                }
+                argv[i] = abs_path(argv[i]);
                 print_list(argv[i], args, (int)strlen(argv[i]));
             }
             else
