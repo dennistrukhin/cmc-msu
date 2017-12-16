@@ -5,14 +5,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
-
-char * concat(const char *s1, const char *s2)
-{
-    char * result = malloc(strlen(s1) + strlen(s2) + 1);
-    strcpy(result, s1);
-    strcat(result, s2);
-    return result;
-}
+#include "lib.h"
 
 
 void copy_file(char * path_from, char * path_to)
@@ -50,10 +43,19 @@ void copy(char * path_from, char * path_to)
 {
     char * new_path_from;
     char * new_path_to;
-    struct stat fileStat;
+    struct stat fileStat, fileStatTo;
     DIR * d;
     struct dirent * dir;
     stat(path_from, &fileStat);
+    // Если второй файл существует и один из файлов является ссылкой на другой,
+    // то пропускаем (не копируем)
+    if (access(path_to, F_OK) != -1) {
+        stat(path_from, &fileStatTo);
+        if (fileStat.st_ino == fileStatTo.st_ino) {
+            fprintf(stdout, "cp: %s and %s are identical (not copied).\n", path_from, path_to);
+            return;
+        }
+    }
     if (S_ISDIR(fileStat.st_mode))
     {
         // Это директория, надо создать такую же
@@ -88,20 +90,6 @@ void copy(char * path_from, char * path_to)
 }
 
 
-char * get_current_directory()
-{
-    char * cwd;
-    cwd = getcwd(0, 0);
-    return cwd;
-}
-
-
-char * abs_path(char * path)
-{
-    return concat(concat(get_current_directory(), "/"), path);
-}
-
-
 int main(int argc, char * argv[])
 {
     char * path_from;
@@ -114,22 +102,11 @@ int main(int argc, char * argv[])
     path_from = argv[1];
     path_to = argv[2];
     // Если пути относительные, получим из них абсолютные
-    if (*path_from != '/')
-    {
-        path_from = abs_path(path_from);
-    }
-    if (*path_to != '/')
-    {
-        path_to = abs_path(path_to);
-    }
+    path_from = abs_path(path_from);
+    path_to = abs_path(path_to);
     if (access(path_from, F_OK) == -1)
     {
         fprintf(stderr, "Source path does not exist");
-        return  1;
-    }
-    if (access(path_to, F_OK) != -1)
-    {
-        fprintf(stderr, "Destination path already exists");
         return  1;
     }
     copy(path_from, path_to);
