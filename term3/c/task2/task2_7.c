@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <setjmp.h>
-#include <math.h>
 
 jmp_buf begin;
 char curlex;
@@ -35,49 +34,58 @@ void error(void) {
     longjmp(begin, 1);
 }
 
-int expr()
-{
+int expr() {
     int e = add();
-    while (curlex == '+')
-    {
-        getlex(); e += add();
-    }
-    while (curlex == '-')
-    {
-        getlex(); e -= add();
+    while (curlex == '+' || curlex == '-') {
+        if (curlex == '+') {
+            getlex();
+            e += add();
+        } else {
+            getlex();
+            e -= add();
+        }
     }
     return e;
 }
 
-int add()
-{
+int deg(int a) {
+    int n = mult();
+    if (curlex == '^') {
+        getlex();
+        n = deg(n);
+    }
+    int i;
+    int res = a;
+    for (i = 1; i < n; i++) {
+        res *= a;
+    }
+    if (n == 0) {
+        return 1;
+    }
+    return res;
+}
+
+int add() {
     int a = mult();
-    while (curlex == '*')
-    {
-        getlex(); a *= mult();
-    }
-    while (curlex == '/')
-    {
-        getlex(); a /= mult();
-    }
-    return a;
-}
-
-int mult()
-{
-    int a = power();
-    while (curlex == '^')
-    {
-        getlex(); a = (int)pow(a, power());
+    while (curlex == '*' || curlex == '/' || curlex == '^') {
+        if (curlex == '*') {
+            getlex();
+            a *= mult();
+        } else if (curlex == '/') {
+            getlex();
+            a = (int) a / mult();
+        } else if (curlex == '^') {
+            getlex();
+            a = deg(a);
+        }
     }
     return a;
 }
 
-int power()
-{
+
+int mult() {
     int m;
-    switch(curlex)
-    {
+    switch (curlex) {
         case '0':
         case '1':
         case '2':
@@ -92,10 +100,11 @@ int power()
             break;
         case '(':
             getlex();
-            m=expr();
-            if (curlex == ')')
-                break;
-        default : error();
+            m = expr();
+            if (curlex == ')') break;
+            /* Иначе ошибка - нет закрывающей скобки */
+        default :
+            error();
     }
     getlex();
     return m;
