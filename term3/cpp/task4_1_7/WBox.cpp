@@ -32,11 +32,11 @@ void WBox::set_window_height(int window_heigth) {
     this->window_height = window_heigth;
 }
 
-int WBox::get_window_width() {
+int WBox::get_window_width() const {
     return window_width;
 }
 
-int WBox::get_window_height() {
+int WBox::get_window_height() const {
     return window_height;
 }
 
@@ -74,7 +74,7 @@ WBox::WBox(int width, int length, int height, int window_width, int window_heigh
     this->window_height = window_height;
 }
 
-int WBox::area() {
+int WBox::area() const {
     return Box::area() - window_height * window_width;
 }
 

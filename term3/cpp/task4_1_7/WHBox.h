@@ -16,7 +16,7 @@ public:
     WHBox(int width, int height, int window_width, int window_height, int lid_height);
     WHBox(int width, int length, int height, int window_width, int window_height, int lid_height);
     ~WHBox();
-    int area();
+    int area() const;
 };
 
 

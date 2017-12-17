@@ -19,9 +19,9 @@ public:
     ~WBox();
     void set_window_width(int window_width);
     void set_window_height(int window_heigth);
-    int get_window_width();
-    int get_window_height();
-    int area();
+    int get_window_width() const;
+    int get_window_height() const;
+    int area() const;
 };
 
 

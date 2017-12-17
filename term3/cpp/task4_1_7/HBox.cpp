@@ -25,12 +25,12 @@ HBox::~HBox() {
     std::cout << "HBox destructor has been called" << std::endl;
 }
 
-int HBox::area() {
+int HBox::area() const {
     Box lid = Box(get_width(), get_length(), get_height());
     return Box::area() + lid_area();
 }
 
-int HBox::lid_area() {
+int HBox::lid_area() const {
     Box lid = Box(get_width(), get_length(), get_height());
     return lid.area();
 }

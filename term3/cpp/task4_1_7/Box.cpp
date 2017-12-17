@@ -84,11 +84,11 @@ Box::~Box() {
     std::cout << "Box destructor has been called" << std::endl;
 }
 
-int Box::area() {
+int Box::area() const {
     return width * length + 2 * width * height + 2 * length * height;
 }
 
-void Box::dump() {
+void Box::dump() const {
     std::cout << "Width: " << width << ", Length: " << length << ", Height: " << height << std::endl;
 }
 

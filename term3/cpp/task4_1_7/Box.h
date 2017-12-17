@@ -34,8 +34,8 @@ public:
     int get_width() const;
     int get_length() const;
     int get_height() const;
-    int area();
-    void dump();
+    int area() const;
+    void dump() const;
 };
 
 

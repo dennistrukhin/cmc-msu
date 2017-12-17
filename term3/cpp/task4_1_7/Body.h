@@ -3,7 +3,7 @@
 
 
 class Body {
-    virtual int area() = 0;
+    virtual int area() const = 0;
 };
 
 

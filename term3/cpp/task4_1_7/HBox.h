@@ -12,8 +12,8 @@ public:
     HBox(int, int, int);
     HBox(int, int, int, int);
     ~HBox();
-    int area();
-    int lid_area();
+    int area() const;
+    int lid_area() const;
 };
 
 

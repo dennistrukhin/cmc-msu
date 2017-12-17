@@ -18,7 +18,7 @@ WHBox::WHBox(int width, int length, int height, int window_width, int window_hei
         WBox(width, length, height, window_width, window_height),
         HBox(width, length, height, lid_height) {}
 
-int WHBox::area() {
+int WHBox::area() const {
     return WBox::area() + HBox::lid_area();
 }
 
