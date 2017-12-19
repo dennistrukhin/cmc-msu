@@ -56,7 +56,7 @@ void print_list(char * path, int args, int orig_path_len)
                     printf(" %12s", pwd->pw_name);
                 }
             }
-            if (args & ARG_GROUP && (grp = getgrgid(fileStat.st_gid)) != NULL) {
+            if ((args & ARG_GROUP) && (args & ARG_LIST) && (grp = getgrgid(fileStat.st_gid)) != NULL) {
                 printf(" %12s", grp->gr_name);
             }
             if (args & ARG_LIST) {
@@ -134,5 +134,8 @@ int main(int argc, char * argv[])
     {
         cur_dir = get_current_directory();
         print_list(cur_dir, args, (int)strlen(cur_dir));
+    }
+    if (!(args & ARG_LIST)) {
+        fprintf(stdout, "\n");
     }
 }

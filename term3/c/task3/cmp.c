@@ -16,7 +16,7 @@ int main(int argc, char * argv[])
 
     if (argc < 3)
     {
-        fprintf(stderr, "cmp: missing operand after 'cmp'");
+        fprintf(stderr, "cmp: missing operand after 'cmp'\n");
         return  1;
     }
     path1 = abs_path(argv[1]);
@@ -34,11 +34,11 @@ int main(int argc, char * argv[])
 
     f1 = fopen(path1, "r");
     if (f1 == NULL) {
-        fprintf(stderr, "Error opening %s", path1);
+        fprintf(stderr, "Error opening %s\n", path1);
     }
     f2 = fopen(path2, "r");
     if (f2 == NULL) {
-        fprintf(stderr, "Error opening %s", path2);
+        fprintf(stderr, "Error opening %s\n", path2);
     }
     while (1)
     {
