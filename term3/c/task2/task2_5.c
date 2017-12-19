@@ -26,6 +26,7 @@ void append(Node ** head, char * str) {
 int main() {
     char * str;
     Node * head = NULL;
+    Node * tmp;
     Node ** ptr;
     int first_output = 1;
     fprintf(stdout, "==>\n");
@@ -38,7 +39,9 @@ int main() {
     ptr = &head;
     while (*ptr != NULL) {
         if (strcmp(str, (*ptr)->str) == 0 && (*ptr)->next != NULL) {
+            tmp = *ptr;
             *ptr = (*ptr)->next;
+            free(tmp);
         } else {
             ptr = &(*ptr)->next;
         }
