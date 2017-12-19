@@ -1,10 +1,14 @@
+//
+// Created by Dennis Trukhin on 07/12/2017.
+//
+
 #ifndef BOX_HBOX_H
 #define BOX_HBOX_H
 
 
 #include "Box.h"
 
-class HBox : Box {
+class HBox : public virtual Box {
 private:
     int lid_height;
 public:

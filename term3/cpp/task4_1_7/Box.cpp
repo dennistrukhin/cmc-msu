@@ -80,10 +80,6 @@ Box::Box(const Box &obj) {
     length = obj.length;
 }
 
-Box::~Box() {
-    std::cout << "Box destructor has been called" << std::endl;
-}
-
 int Box::area() const {
     return width * length + 2 * width * height + 2 * length * height;
 }

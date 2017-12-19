@@ -14,7 +14,6 @@ public:
     Box(int width, int height);
     Box(int width, int length, int height);
     Box (const Box & obj);
-    ~Box();
     Box & operator ++ ();
     Box operator ++ (int);
     Box & operator -- ();

@@ -8,7 +8,7 @@
 
 #include "Box.h"
 
-class WBox : Box {
+class WBox : public virtual Box {
 private:
     int window_width;
     int window_height;

@@ -31,6 +31,6 @@ int HBox::area() const {
 }
 
 int HBox::lid_area() const {
-    Box lid = Box(get_width(), get_length(), get_height());
+    Box lid = Box(get_width(), get_length(), lid_height);
     return lid.area();
 }
